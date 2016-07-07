@@ -26,7 +26,7 @@ public class MainJFrame extends JFrame {
 		//配置面板
 		configPane = new JPanel();
 		configPane.setPreferredSize(new Dimension(980, 150));
-		configPane.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "配置",
+		configPane.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "第1步：配置",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		//数据库配置
 		JPanel datafigPane = new JPanel();
@@ -67,7 +67,7 @@ public class MainJFrame extends JFrame {
 		//条件选择面板
 		conditionPane = new JPanel();
 		conditionPane.setPreferredSize(new Dimension(980, 100));
-		conditionPane.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "第一步: 条件选择",
+		conditionPane.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "第2步: 条件选择",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		JLabel conditionPane_label1 = new JLabel("开始时间");
 		JTextField conditionPane_textField_text = new JTextField("", 15);
