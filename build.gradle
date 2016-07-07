@@ -9,6 +9,9 @@
 
 // Apply the java plugin to add support for Java
 apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'com.github.chm.Main'
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -22,5 +25,6 @@ dependencies {
     // The production code uses the SLF4J logging API at compile time
     compile 'org.slf4j:slf4j-api:1.7.21'
 	compile group: 'com.jolbox', name: 'bonecp', version: '0.8.0.RELEASE'
+    compile group: 'mysql', name: 'mysql-connector-java', version: '6.0.3'
     testCompile 'junit:junit:4.12'
 }
