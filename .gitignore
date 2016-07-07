@@ -5,3 +5,6 @@ build/
 .settings/
 .project
 logs/
+bin/
+.idea/
+.gradle/
