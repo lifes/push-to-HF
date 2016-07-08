@@ -2,6 +2,8 @@ package com.github.chm.ui;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -14,6 +16,9 @@ public class MainJFrame extends JFrame {
 	private JPanel contentPane;
 	private JPanel conditionPane;
 	private JPanel configPane;
+	
+	private JButton btnStart;
+	private JButton btnStop;
 
 	public MainJFrame() {
 		// JFrame设置
@@ -74,6 +79,8 @@ public class MainJFrame extends JFrame {
 		
 		conditionPane.add(conditionPane_label1);
 		conditionPane.add(conditionPane_textField_text);
+		
+		//
 
 		//
 		contentPane = new JPanel();

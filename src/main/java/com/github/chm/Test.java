@@ -12,9 +12,9 @@ import java.sql.SQLException;
 public class Test {
     public static void main(String[] args){
         BoneCPConfig config = new BoneCPConfig();
-        config.setJdbcUrl("jdbc:mysql://localhost:3306/hmdata"); // jdbc url specific to your database, eg jdbc:mysql://127.0.0.1/yourdb
-        config.setUsername("root");
-        config.setPassword("");
+        config.setJdbcUrl("jdbc:oracle:thin:@10.33.25.170:1521:orcl");
+        config.setUsername("IPM20141117_38_BMS");
+        config.setPassword("hik12345");
         config.setMinConnectionsPerPartition(5);
         config.setMaxConnectionsPerPartition(10);
         config.setPartitionCount(1);
@@ -42,9 +42,5 @@ public class Test {
                 }
             }
         }
-
-        // fetch a connectionß
-
-        // connection = connectionPool.getConnection();
     }
 }

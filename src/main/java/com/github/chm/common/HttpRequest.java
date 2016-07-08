@@ -9,7 +9,6 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -67,7 +66,7 @@ public class HttpRequest {
     }
     public String get2(String url){
         HttpPost httpPost = new HttpPost(url);
-        httpPost.setEntity("");
+        //httpPost.setEntity("");
         return null;
     }
     public static void main(String args[]) throws UnrecoverableKeyException, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
