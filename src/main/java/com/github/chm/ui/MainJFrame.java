@@ -4,14 +4,9 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.UIManager;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.DefaultCaret;
 
@@ -131,6 +126,7 @@ public class MainJFrame extends JFrame {
 		consolePane.setPreferredSize(new Dimension(980, 300));
 		consolePane.setLayout(new GridLayout(0,1,0,0));
 		consoleTextArea = new JTextArea();
+		consoleTextArea.setEditable(false);
 		((DefaultCaret) consoleTextArea.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);		
 		consolePane.add(new JScrollPane(consoleTextArea));
 		
@@ -141,11 +137,38 @@ public class MainJFrame extends JFrame {
 		contentPane.add(paneBtn);
 		contentPane.add(consolePane);
 		setContentPane(contentPane);
+		btnStart.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						for(int i = 0;i<1000; i++) {
+							try {
+								Thread.sleep(10);
+							} catch (InterruptedException e1) {
+								e1.printStackTrace();
+							}
+							appendMessage(i+"msg"+"\n");
+						}
+					}
+				}).start();
+			}
+		});
 	}
 
-	private void condition_startId() {
-		// TODO Auto-generated method stub
-		
+	public void appendMessage(String msg){
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				consoleTextArea.append(msg);
+				String text = consoleTextArea.getText();
+				if(text!=null&&text.length()>30000){
+					text = text.substring(text.length()-10000, text.length());
+					consoleTextArea.setText(text);
+					consoleTextArea.setCaretPosition(consoleTextArea.getDocument().getLength());//设置光标总是在最后一行
+				}
+			}
+		});
 	}
-	
 }
