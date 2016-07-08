@@ -25,11 +25,12 @@ public class Test {
             e.printStackTrace();
         }
         Connection conn = null;
-        for(;;){
+        for(int i=1;i<100;i++){
             try {
                 System.out.println("kaishihuoqu");
                  conn = connectionPool.getConnection();
                 System.out.println(conn);
+                
             } catch (SQLException e) {
                 e.printStackTrace();
             }finally{
