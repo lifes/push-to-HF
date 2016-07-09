@@ -3,6 +3,10 @@ apply plugin: 'application'
 
 mainClassName = 'com.github.chm.Main'
 
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+
 repositories {
       jcenter()
     //mavenCentral()

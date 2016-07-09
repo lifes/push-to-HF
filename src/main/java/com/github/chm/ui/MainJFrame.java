@@ -1,5 +1,8 @@
 package com.github.chm.ui;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -19,7 +22,14 @@ public class MainJFrame extends JFrame {
 	private JButton btnStop;
 	
 	private JTextArea consoleTextArea;
-
+	private volatile boolean isCanceled = true;
+	private volatile int status = 0;//0 表示未启动 1表示启动 -1表示停止。
+	static Logger logger = LoggerFactory.getLogger(MainJFrame.class);
+	public  static void main(String[] args){
+		MainJFrame frame = new MainJFrame();
+		frame.setVisible(true);
+		logger.info("程序启动成功");
+	}
 	public MainJFrame() {
 		// JFrame设置
 		this.setTitle("本工具用来抽取311平台过车数据到华富平台");
@@ -37,7 +47,7 @@ public class MainJFrame extends JFrame {
 		//数据库配置
 		JPanel datafigPane = new JPanel();
 		datafigPane.setLayout(new FlowLayout(FlowLayout.LEFT));
-		datafigPane.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "数据库配置",
+		datafigPane.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "311数据库配置",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		datafigPane.setPreferredSize(new Dimension(900, 55));
 		JLabel configPane_label1 = new JLabel("    ip");
@@ -143,7 +153,20 @@ public class MainJFrame extends JFrame {
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
+						isCanceled = false;
+						btnStart.setEnabled(false);
+						status = 1;
 						for(int i = 0;i<1000; i++) {
+							if(isCanceled){
+								status = -1;
+								SwingUtilities.invokeLater(new Runnable() {
+									@Override
+									public void run() {
+										btnStart.setEnabled(true);
+									}
+								});
+								return;
+							}
 							try {
 								Thread.sleep(10);
 							} catch (InterruptedException e1) {
@@ -155,9 +178,15 @@ public class MainJFrame extends JFrame {
 				}).start();
 			}
 		});
+		btnStop.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				isCanceled = true;
+			}
+		});
 	}
 
-	public void appendMessage(String msg){
+	public void appendMessage(final String msg){
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
