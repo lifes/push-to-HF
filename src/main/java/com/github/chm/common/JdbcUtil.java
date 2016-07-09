@@ -14,11 +14,12 @@ import org.slf4j.LoggerFactory;
  * Created by chenhuaming on 16/7/8.
  */
 public class JdbcUtil {
-	//private static Logger logger = LoggerFactory.getLogger(JdbcUtil.class);
+	private static Logger logger = LoggerFactory.getLogger(JdbcUtil.class);
     private static volatile BoneCP connectionPool;
     public static synchronized void initConnectionPool(String jdbcurl, String username, String password) throws InitDataConnectionPoolException {
         shutDownConnectionPool();
-        /* 可能导致初始化卡住,this code can fix
+        //可能导致初始化卡住,this code can fix
+        /*
         Connection testConn = null;
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
@@ -27,7 +28,7 @@ public class JdbcUtil {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException e) {
-            System.out.println("fuck");
+            logger.error("fuck!!!数据库连接不上");
             e.printStackTrace();
         }finally {
             if(testConn != null) {
@@ -38,7 +39,7 @@ public class JdbcUtil {
                 }
             }
         }
-         */
+        */
         connectionPool = null;
         BoneCPConfig config = new BoneCPConfig();
         config.setJdbcUrl(jdbcurl);
