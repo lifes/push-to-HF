@@ -36,6 +36,7 @@ public class MainJFrame extends JFrame {
     private JTextField textField_db = new JTextField("", 5);
     private JTextField textField_user = new JTextField("", 10);
     private JTextField textField_password = new JTextField("", 10);
+    private JTextField textField_hfurl = new JTextField("0",30);
 
     private JTextField textField_vehicleStartTime = new JTextField("", 15);//开始抽取的时间
     private JTextField textField_vehicleStartId = new JTextField("", 15);//开始抽取的id
@@ -55,6 +56,7 @@ public class MainJFrame extends JFrame {
     private JTextField textField_allCount = new JTextField("0", 10);
     private JTextField textField_successCount = new JTextField("0", 10);
     private JTextField textField_failCount = new JTextField("0", 10);
+
 
 
     static Logger logger = LoggerFactory.getLogger(MainJFrame.class);
@@ -106,10 +108,8 @@ public class MainJFrame extends JFrame {
         hfPane.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "华富接口",
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         hfPane.setPreferredSize(new Dimension(700, 55));
-        JLabel hfPane_label1 = new JLabel("   URL");
-        JTextField hfPane_url = new JTextField("", 30);
-        hfPane.add(hfPane_label1);
-        hfPane.add(hfPane_url);
+        hfPane.add(new JLabel("   URL"));
+        hfPane.add(textField_hfurl);
         configPane.add(datafigPane);
         configPane.add(hfPane);
         JButton btnSaveConfig = new JButton("保存到配置文件");
@@ -206,7 +206,7 @@ public class MainJFrame extends JFrame {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        btnStart.setEnabled(false);
+                        letCompomentsLosePower();
                         isCanceled = false;
                         status = 1;
 
@@ -225,7 +225,7 @@ public class MainJFrame extends JFrame {
                             logger.error(e1.getMessage(), e1);
                             isCanceled = true;
                             status = -1;
-                            btnStart.setEnabled(true);
+                            recoverCompomentsPower();
                             return;
                         }
                         //todo 测试hfUrl是否可以访问
@@ -235,7 +235,7 @@ public class MainJFrame extends JFrame {
                             //step1 从数据库里面抽取数据
                             if(isCanceled == true){
                                 status = -1;
-                                btnStart.setEnabled(true);
+                                recoverCompomentsPower();
                                 return;
                             }
                             Long lastVehicleId = 0L;
@@ -315,6 +315,7 @@ public class MainJFrame extends JFrame {
                 prop.setProperty("db", textField_db.getText());
                 prop.setProperty("username", textField_user.getText());
                 prop.setProperty("password", textField_password.getText());
+                prop.setProperty("hfurl", textField_hfurl.getText());
                 if (Util.writePropertiesToFile("tmp", "config.properties", prop, "save prop")) {
                     appendMessage("保存配置到文件成功");
                 } else {
@@ -341,11 +342,13 @@ public class MainJFrame extends JFrame {
                 String db = prop.getProperty("db", "");
                 String username = prop.getProperty("username", "");
                 String password = prop.getProperty("password", "");
+                String hfurl = prop.getProperty("hfurl","");
                 textField_ip.setText(ip);
                 textField_port.setText(port);
                 textField_db.setText(db);
                 textField_user.setText(username);
                 textField_password.setText(password);
+                textField_hfurl.setText(hfurl);
             }
         });
 
@@ -377,5 +380,36 @@ public class MainJFrame extends JFrame {
             }
         });
     }
-
+    public void letCompomentsLosePower(){
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                textField_ip.setEditable(false);
+                textField_port.setEditable(false);
+                textField_db.setEditable(false);
+                textField_user.setEditable(false);
+                textField_password.setEditable(false);
+                textField_hfurl.setEditable(false);
+                textField_vehicleStartTime.setEditable(false);
+                textField_vehicleStartId.setEditable(false);
+                btnStart.setEnabled(false);
+            }
+        });
+    }
+    public void recoverCompomentsPower(){
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                textField_ip.setEditable(true);
+                textField_port.setEditable(true);
+                textField_db.setEditable(true);
+                textField_user.setEditable(true);
+                textField_password.setEditable(true);
+                textField_hfurl.setEditable(true);
+                textField_vehicleStartTime.setEditable(true);
+                textField_vehicleStartId.setEditable(true);
+                btnStart.setEnabled(true);
+            }
+        });
+    }
 }

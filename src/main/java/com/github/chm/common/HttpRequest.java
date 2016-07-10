@@ -1,23 +1,29 @@
 package com.github.chm.common;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.github.chm.exception.DownloadImgException;
+import com.github.chm.exception.UpLoadToHfException;
+import com.github.chm.model.HfData;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
+
 
 /**
  * Created by chenhuaming on 16/7/8.
@@ -94,6 +100,39 @@ public class HttpRequest {
             }
         } catch (IOException e) {
             throw new DownloadImgException(String.format("(IO异常)下载图片失败:url(%s)", url), e);
+        } finally {
+            try {
+                if (response != null) {
+                    response.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public JSONObject postDataToHF(String url, HfData data) throws UpLoadToHfException {
+        String dt = JSON.toJSONString(data);
+        HttpPost post = new HttpPost();
+        post.setConfig(requestConfig);
+        CloseableHttpResponse response = null;
+        StringEntity myEntity = new StringEntity(dt, ContentType.APPLICATION_JSON);// 构造请求数据
+        try {
+            response = httpClient.execute(post);
+            if (response.getStatusLine().getStatusCode() == 200) {
+                HttpEntity entity = response.getEntity();
+                String responseContent = EntityUtils.toString(entity, "UTF-8");
+                try {
+                    JSONObject res = JSON.parseObject(responseContent);
+                    return res;
+                }catch (Throwable e){
+                    throw new UpLoadToHfException(String.format("(jsonParse错误)上传HF接口失败:%s;", dt),e);
+                }
+            } else {
+                throw new UpLoadToHfException(String.format("(状态不是200)上传HF接口失败:%s;", dt));
+            }
+        } catch (IOException e) {
+            throw new UpLoadToHfException(String.format("(IO异常)上传HF接口失败%s:;", dt), e);
         } finally {
             try {
                 if (response != null) {
