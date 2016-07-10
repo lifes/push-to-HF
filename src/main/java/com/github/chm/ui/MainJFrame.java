@@ -7,7 +7,6 @@ import com.github.chm.common.Util;
 import com.github.chm.exception.InitDataConnectionPoolException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -243,9 +242,9 @@ public class MainJFrame extends JFrame {
                             Connection conn = null;
                             try {
                                 conn = JdbcUtil.getConnection();
-                                allCount.compareAndSet(allCount.get(), allCount.get() + 200L);
+                                allCount.compareAndSet(allCount.get(), allCount.get() + 20L);
                                 List<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
-                                for (int i = 0; i < 200; i++) {
+                                for (int i = 0; i < 20; i++) {
                                     Future<Boolean> future = executor.submit(new Callable<Boolean>() {
                                         @Override
                                         public Boolean call() throws Exception {

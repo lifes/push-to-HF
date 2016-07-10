@@ -104,15 +104,4 @@ public class HttpRequest {
             }
         }
     }
-
-    public static void main(String args[]) throws UnrecoverableKeyException, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DownloadImgException {
-        String url = "http://image18-c.poco.cn/mypoco/myphoto/20160707/21/17369701120160707215339095_640.jpg?682x1024_120";
-        String s = new HttpRequest().getBase64Img(url);
-        System.out.println(s);
-        System.out.println("fuck:" + Base64.encodeBase64URLSafeString(new byte[9]));
-        for (int i = 0; ; i++) {
-            new HttpRequest().getBase64Img(url);
-            System.out.println(i + "下载图片成功");
-        }
-    }
 }

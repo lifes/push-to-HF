@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'application'
 
-mainClassName = 'com.github.chm.Main'
+mainClassName = 'com.github.chm.ui.MainJFrame'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
