@@ -7,6 +7,9 @@ public class Util {
 	public static String getOracleJdbcUrl(String ip, String port, String db){
 		return String.format("jdbc:oracle:thin:@%s:%s:%s", ip,port,db);
 	}
+	public static String getMysqlJdbcUrl(String ip, String port, String db){
+		return String.format("jdbc:mysql://%s:%s/%s",ip,port,db);
+	}
 	public static Properties readPropertiesFromFile(String dir, String fileName){
 		Properties prop = new Properties();
 		File file = new File(dir + File.separator + fileName);

@@ -16,7 +16,7 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.21'
 	compile group: 'com.jolbox', name: 'bonecp', version: '0.8.0.RELEASE'
     compile group: 'mysql', name: 'mysql-connector-java', version: '6.0.3'   
-    compile 'org.apache.httpcomponents:httpclient:4.4'
+    compile 'org.apache.httpcomponents:httpclient:4.5.2'
     compile 'com.alibaba:fastjson:1.2.12'
     compile files('lib/ojdbc6-12.1.0.1.0.jar')
     

@@ -10,4 +10,7 @@ public class InitDataConnectionPoolException extends Exception{
 	public InitDataConnectionPoolException(String msg,Throwable e){
         super(msg,e);
     }
+    public InitDataConnectionPoolException(String msg){
+        super(msg);
+    }
 }
