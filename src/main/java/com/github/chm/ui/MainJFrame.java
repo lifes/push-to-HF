@@ -1,13 +1,13 @@
 package com.github.chm.ui;
 
+import com.alibaba.fastjson.JSONObject;
 import com.github.chm.common.DateUtil;
 import com.github.chm.common.HttpRequest;
 import com.github.chm.common.JdbcUtil;
 import com.github.chm.common.Util;
 import com.github.chm.dao.SampleDao;
 import com.github.chm.exception.InitDataConnectionPoolException;
-
-import org.apache.commons.codec.binary.StringUtils;
+import com.github.chm.model.HfData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.awt.Dimension;
@@ -19,7 +19,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -253,8 +252,8 @@ public class MainJFrame extends JFrame {
 							return;
 						}
 						String vehicle_id = textArea_vehicleIds.getText();
-						if(!vehicle_id.matches("^[0-9,]*$")){
-							appendMessage("要抽取的卡口编号还有非法字符，请检查");							
+						if (!vehicle_id.matches("^[0-9,]*$")) {
+							appendMessage("要抽取的卡口编号还有非法字符，请检查");
 							isCanceled = true;
 							status = -1;
 							recoverCompomentsPower();
@@ -313,20 +312,21 @@ public class MainJFrame extends JFrame {
 							appendMessage("抽取任务停止======");
 							return;
 						}
-						
+
 						long vehicleStartId = 0L;
-						if(vehicleStartIdFromTime == null){
+						if (vehicleStartIdFromTime == null) {
 							vehicleStartId = vehicleStartIdfromUI;
 							theVehicleId.set(vehicleStartId);
-						}else{
-							vehicleStartId = (vehicleStartIdFromTime>vehicleStartIdfromUI)?vehicleStartIdFromTime:vehicleStartIdfromUI;
+						} else {
+							vehicleStartId = (vehicleStartIdFromTime > vehicleStartIdfromUI) ? vehicleStartIdFromTime
+									: vehicleStartIdfromUI;
 							theVehicleId.set(vehicleStartId);
 						}
 						refreshVehicleStartId();
-						
 						appendMessage("开始抽取数据=============vehicleStartId:" + vehicleStartId);
+						final String hfurl = textField_hfurl.getText();
 						ExecutorService executor = Executors.newFixedThreadPool(execThreadsNumber);
-						for (;;) {
+						while (true) {
 							// step1 从数据库里面抽取数据
 							if (isCanceled == true) {
 								status = -1;
@@ -336,47 +336,126 @@ public class MainJFrame extends JFrame {
 								return;
 							}
 							Long lastVehicleId = 0L;
-
-							allCount.compareAndSet(allCount.get(), allCount.get() + perQueryNumber);
-							List<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
-							for (int i = 0; i < perQueryNumber; i++) {
-								Future<Boolean> future = executor.submit(new Callable<Boolean>() {
-									@Override
-									public Boolean call() throws Exception {
-										String url = "http://image18-c.poco.cn/mypoco/myphoto/20160707/21/17369701120160707215339095_640.jpg?682x1024_120";
-										String s = httpRequest.getBase64Img(url);
-										return true;
-									}
-								});
-								futures.add(future);
+							List<HfData> oneQuerylist0 = new ArrayList<HfData>();
+							try {
+								oneQuerylist0 = new SampleDao().getVehicleDatas(vehicleStartId,
+										vehicleStartId + perQueryNumber);
+							} catch (SQLException e1) {
+								appendMessage("查询失败" + e1.getMessage());
+								continue;
 							}
-							// 等待所有任务完成
-							for (;;) {
-								boolean hasJob = false;
-								for (Future<Boolean> future : futures) {
-									if (!future.isDone()) {
-										hasJob = true;
+							vehicleStartId += perQueryNumber;
+							theVehicleId.compareAndSet(theVehicleId.get(), vehicleStartId);
+							refreshVehicleStartId();
+							
+							//根据卡口过滤数据
+							List<HfData> oneQuerylist = new ArrayList<HfData>();
+							if (vehileIds.size() == 0) {
+								oneQuerylist = oneQuerylist0;
+							} else {
+								for (HfData hfData : oneQuerylist) {
+									if (vehileIds.contains(hfData.getVehicleId())) {
+										oneQuerylist.add(hfData);
+									}
+								}
+							}
+							allCount.compareAndSet(allCount.get(), allCount.get() + oneQuerylist.size());
+							if (oneQuerylist.size() > 0) {
+								List<Future<HfData>> futures = new ArrayList<Future<HfData>>();
+								for (int i = 0; i < oneQuerylist.size(); i++) {
+									final HfData hfData = oneQuerylist.get(i);
+									Future<HfData> future = executor.submit(new Callable<HfData>() {
+										@Override
+										public HfData call() throws Exception {
+											String url = hfData.getImageURL();
+											// url = "http://image18-c.poco.cn/mypoco/myphoto/20160707/21/17369701120160707215339095_640.jpg?682x1024_120";
+											String base64Img = httpRequest.getBase64Img(url);
+											HfData res = new HfData();
+											res.setImageData(base64Img);
+											return res;
+										}
+									});
+									futures.add(future);
+								}
+								// 等待所有任务完成
+								for (;;) {
+									boolean hasJob = false;
+									for (Future<HfData> future : futures) {
+										if (!future.isDone()) {
+											hasJob = true;
+											break;
+										}
+									}
+									if (!hasJob) {
 										break;
 									}
 								}
-								if (!hasJob) {
-									break;
+								List<HfData> step2Data = new ArrayList<HfData>();
+								for (Future<HfData> future : futures) {
+									try {
+										step2Data.add(future.get());										
+									} catch (InterruptedException e1) {
+										e1.printStackTrace();
+										failCount.incrementAndGet();
+									} catch (ExecutionException e1) {
+										failCount.incrementAndGet();
+										appendMessage(e1.getMessage());
+										e1.printStackTrace();
+									}
 								}
-							}
-							for (Future future : futures) {
-								try {
-									future.get();
-									successCount.incrementAndGet();
-								} catch (InterruptedException e1) {
-									e1.printStackTrace();
-									failCount.incrementAndGet();
-								} catch (ExecutionException e1) {
-									failCount.incrementAndGet();
-									appendMessage(e1.getMessage());
-									e1.printStackTrace();
+								appendMessage(String.format("本次查询%d条数据,共查询到%d条数据,共有设定卡口过车记录%d条,下载图片成功%d条数据",
+										perQueryNumber, oneQuerylist0.size(), oneQuerylist.size(), step2Data.size()));
+								// step2	begin							
+								if(step2Data.size()>0){
+									List<Future<Boolean>> futures2 = new ArrayList<Future<Boolean>>();
+									for(int i=0; i<step2Data.size(); i++){
+										final HfData hfData = step2Data.get(i);
+										Future<Boolean> future = executor.submit(new Callable<Boolean>() {
+											@Override
+											public Boolean call() throws Exception {
+												JSONObject resJson= httpRequest.postDataToHF(hfurl, hfData);
+												if(resJson.getIntValue("errorcode")!=0){
+													return false;
+												}
+												return true;
+											}
+										});
+										futures2.add(future);
+									}
+									for (;;) {
+										boolean hasJob = false;
+										for (Future<Boolean> future : futures2) {
+											if (!future.isDone()) {
+												hasJob = true;
+												break;
+											}
+										}
+										if (!hasJob) {
+											break;
+										}
+									}
+									int succ = 0;
+									for (Future<Boolean> future : futures2) {
+										try {
+											Boolean flag = future.get();
+											if(flag == true){
+											    successCount.incrementAndGet();
+											    succ += 1;
+											}
+										} catch (InterruptedException e1) {
+											failCount.incrementAndGet();
+											e1.printStackTrace();
+										} catch (ExecutionException e1) {
+											failCount.incrementAndGet();
+											appendMessage("发送数据给华富失败"+e1.getMessage());
+											e1.printStackTrace();
+										}
+									}										
+									appendMessage(String.format("发送给华富%d条数据，成功%d条数据",step2Data.size(),succ));
 								}
+								refreshResult();
+								//step2结束								
 							}
-							refreshResult();
 						}
 					}
 				}).start();
@@ -411,9 +490,10 @@ public class MainJFrame extends JFrame {
 				setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 				if (isCanceled = true && status != 1) {
 					Properties prop = new Properties();
-					prop.setProperty("vehicleStartId", "".equals(textField_vehicleStartId.getText())?"0":textField_vehicleStartId.getText());
+					prop.setProperty("vehicleStartId",
+							"".equals(textField_vehicleStartId.getText()) ? "0" : textField_vehicleStartId.getText());
 					prop.setProperty("vehicleStartIdTime", textField_vehicleStartTime.getText());
-					prop.getProperty("vehicleIds",textArea_vehicleIds.getText());
+					prop.getProperty("vehicleIds", textArea_vehicleIds.getText());
 					Util.writePropertiesToFile("tmp", "condition.txt", prop, "to save the last Condition");
 					setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				} else {
@@ -444,9 +524,9 @@ public class MainJFrame extends JFrame {
 				System.out.println(perQueryNumber);
 				appendMessage("执行线程数：" + execThreadsNumber);
 				appendMessage("每次查询过车数：" + perQueryNumber);
-				//把上次的保存下来的条件初始化
-				Properties prop3 = Util.readPropertiesFromFile("tmp", "condition.txt"); 				
-				String vehicleStartId = prop3.getProperty("vehicleStartId","0");
+				// 把上次的保存下来的条件初始化
+				Properties prop3 = Util.readPropertiesFromFile("tmp", "condition.txt");
+				String vehicleStartId = prop3.getProperty("vehicleStartId", "0");
 				String vehicleStartIdTime = prop3.getProperty("vehicleStartIdTime", "");
 				String vehicleIds = prop3.getProperty("vehicleIds");
 				textField_vehicleStartId.setText(vehicleStartId);

@@ -113,10 +113,11 @@ public class HttpRequest {
 
     public JSONObject postDataToHF(String url, HfData data) throws UpLoadToHfException {
         String dt = JSON.toJSONString(data);
-        HttpPost post = new HttpPost();
+        HttpPost post = new HttpPost(url);
         post.setConfig(requestConfig);
         CloseableHttpResponse response = null;
         StringEntity myEntity = new StringEntity(dt, ContentType.APPLICATION_JSON);// 构造请求数据
+        post.setEntity(myEntity);
         try {
             response = httpClient.execute(post);
             if (response.getStatusLine().getStatusCode() == 200) {
