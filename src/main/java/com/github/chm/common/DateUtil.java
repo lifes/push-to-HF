@@ -1,6 +1,7 @@
 package com.github.chm.common;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -9,7 +10,6 @@ import java.util.Date;
  */
 public class DateUtil {
     public static String format(Date date, String pattern) {
-
         DateFormat df = new SimpleDateFormat(pattern);
         return df.format(date);
     }
@@ -17,5 +17,9 @@ public class DateUtil {
 
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         return df.format(date);
+    }
+    public static Date parse(String dateString, String pattern) throws ParseException{
+    	DateFormat df = new SimpleDateFormat(pattern);
+    	return df.parse(dateString);   	
     }
 }

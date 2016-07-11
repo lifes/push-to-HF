@@ -34,7 +34,7 @@ public class HttpRequest {
     private int socketTimeout = 5000;
 
     //传输超时时间，默认30秒
-    private int connectTimeout = 30000;
+    private int connectTimeout = 10000;
 
     //请求器的配置
     private RequestConfig requestConfig;

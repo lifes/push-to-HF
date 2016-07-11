@@ -1,7 +1,9 @@
 package com.github.chm.common;
 
 import java.io.*;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 public class Util {
 	public static String getOracleJdbcUrl(String ip, String port, String db){
@@ -66,9 +68,19 @@ public class Util {
 		}
 		return true;
 	}
+	public static Set<Integer> coverStringToSet(String s){
+		String[]ss = s.split(",");
+		Set<Integer> set = new HashSet<Integer>();
+		for(String str:ss){
+			if(str!=null&&!"".equals(str.trim())){
+				set.add(Integer.parseInt(str));
+			}
+		}
+		return set;
+	} 
+	
 	public static void main(String args[]){
-		Properties prop = Util.readPropertiesFromFile("records","couts.txt");
-		System.out.println(prop.get("counts"));
-		System.out.println(prop.get("count"));
+		Set<Integer> set = coverStringToSet(",,10,,,");
+		coverStringToSet("");
 	}
 }
