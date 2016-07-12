@@ -1,5 +1,6 @@
 package com.github.chm.ui;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.chm.common.DateUtil;
 import com.github.chm.common.HttpRequest;
@@ -7,6 +8,7 @@ import com.github.chm.common.JdbcUtil;
 import com.github.chm.common.Util;
 import com.github.chm.dao.SampleDao;
 import com.github.chm.exception.InitDataConnectionPoolException;
+import com.github.chm.exception.UpLoadToHfException;
 import com.github.chm.model.HfData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +39,8 @@ public class MainJFrame extends JFrame {
 	public static MainJFrame frame;
 
 	private int execThreadsNumber = 10;
-	private int perQueryNumber = 20;
+	private int execThreadsNumber2 = 100;
+	private int perQueryNumber = 100;
 
 	// 数据库字段
 	private JTextField textField_ip = new JTextField("", 10);
@@ -45,7 +48,7 @@ public class MainJFrame extends JFrame {
 	private JTextField textField_db = new JTextField("", 5);
 	private JTextField textField_user = new JTextField("", 15);
 	private JTextField textField_password = new JTextField("", 15);
-	private JTextField textField_hfurl = new JTextField("0", 30);
+	private JTextField textField_hfurl = new JTextField("0", 50);
 
 	private JTextField textField_vehicleStartTime = new JTextField("", 15);// 开始抽取的时间
 	private JTextField textField_vehicleStartId = new JTextField("0", 15);// 开始抽取的id
@@ -82,7 +85,7 @@ public class MainJFrame extends JFrame {
 		frame = this;
 		this.setTitle("本工具用来抽取311平台过车数据到华富平台");
 		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-		setSize(1020, 800);
+		setSize(1020, 700);
 		setResizable(false);
 		this.setLocation((dimension.width - this.getWidth()) / 2, (dimension.height - this.getHeight()) / 2);
 
@@ -236,8 +239,7 @@ public class MainJFrame extends JFrame {
 							recoverCompomentsPower();
 							appendMessage("抽取任务停止======");
 							return;
-						}
-						// todo 测试hfUrl是否可以访问
+						}						
 						// 初始化httpClient
 						final HttpRequest httpRequest;
 						try {
@@ -260,6 +262,19 @@ public class MainJFrame extends JFrame {
 							appendMessage("抽取任务停止======");
 							return;
 						}
+						//测试hf接口能否访问
+						final String hfurl = textField_hfurl.getText().trim();
+						try {
+							httpRequest.postDataToHF(hfurl, new HfData());
+						} catch (UpLoadToHfException e1) {							
+							appendMessage("华富上传接口不能访问，请检查"+e1.getMessage());
+							logger.error(e1.getMessage(), e1);
+							isCanceled = true;
+							status = -1;
+							recoverCompomentsPower();
+							return;
+						}
+												
 						Set<Integer> vehileIds = Util.coverStringToSet(vehicle_id);
 						// 获取开始抽取的vehicle_id
 						Long vehicleStartIdFromTime = null;
@@ -291,10 +306,10 @@ public class MainJFrame extends JFrame {
 									return;
 								}
 								if (vehicleStartIdFromTime != null) {
-									appendMessage("根据时间查询到过车Id：" + vehicleStartIdFromTime);
+									appendMessage("根据时间查询到过车Id：" + vehicleStartIdFromTime);									
 									break;
 								} else {
-									vehicleStartTime = new Date(vehicleStartTime.getTime() + 60L);
+									vehicleStartTime = new Date(vehicleStartTime.getTime() + 60*1000L);
 								}
 							}
 						}
@@ -324,8 +339,9 @@ public class MainJFrame extends JFrame {
 						}
 						refreshVehicleStartId();
 						appendMessage("开始抽取数据=============vehicleStartId:" + vehicleStartId);
-						final String hfurl = textField_hfurl.getText();
+						
 						ExecutorService executor = Executors.newFixedThreadPool(execThreadsNumber);
+						ExecutorService executor2 = Executors.newFixedThreadPool(execThreadsNumber2);
 						while (true) {
 							// step1 从数据库里面抽取数据
 							if (isCanceled == true) {
@@ -333,13 +349,22 @@ public class MainJFrame extends JFrame {
 								recoverCompomentsPower();
 								appendMessage("抽取任务停止======");
 								executor.shutdown();// 关闭线程池
+								executor2.shutdown();
 								return;
 							}
-							Long lastVehicleId = 0L;
 							List<HfData> oneQuerylist0 = new ArrayList<HfData>();
 							try {
 								oneQuerylist0 = new SampleDao().getVehicleDatas(vehicleStartId,
 										vehicleStartId + perQueryNumber);
+								if(oneQuerylist0.size()<perQueryNumber/4){
+									appendMessage("查询数据不够perQueryNumber"+perQueryNumber+"的1/4,"+"只有"+oneQuerylist0.size()+"条。睡眠2秒");
+									/*try {
+										Thread.sleep(2000);										
+									} catch (InterruptedException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}*/
+								}
 							} catch (SQLException e1) {
 								appendMessage("查询失败" + e1.getMessage());
 								continue;
@@ -368,10 +393,18 @@ public class MainJFrame extends JFrame {
 										@Override
 										public HfData call() throws Exception {
 											String url = hfData.getImageURL();
-											// url = "http://image18-c.poco.cn/mypoco/myphoto/20160707/21/17369701120160707215339095_640.jpg?682x1024_120";
+											//url = "http://10.33.42.99:8085/bms/styles/images/autoLogs/%E5%AE%9D%E9%A9%AC.png";
 											String base64Img = httpRequest.getBase64Img(url);
 											HfData res = new HfData();
 											res.setImageData(base64Img);
+											res.setDeviceId(hfData.getDeviceId());
+											res.setPlateNumber(hfData.getPlateNumber());
+											res.setPlateType(hfData.getPlateType());
+											res.setLaneID(hfData.getLaneID());
+											res.setSpeed(hfData.getSpeed());
+											res.setCarStatus(hfData.getCarStatus());
+											res.setSnapshotTime(hfData.getSnapshotTime());
+											res.setImageURL(hfData.getImageURL());
 											return res;
 										}
 									});
@@ -410,14 +443,18 @@ public class MainJFrame extends JFrame {
 									List<Future<Boolean>> futures2 = new ArrayList<Future<Boolean>>();
 									for(int i=0; i<step2Data.size(); i++){
 										final HfData hfData = step2Data.get(i);
-										Future<Boolean> future = executor.submit(new Callable<Boolean>() {
+										Future<Boolean> future = executor2.submit(new Callable<Boolean>() {
 											@Override
 											public Boolean call() throws Exception {
 												JSONObject resJson= httpRequest.postDataToHF(hfurl, hfData);
-												if(resJson.getIntValue("errorcode")!=0){
+												if(resJson.getIntValue("errorcode")==0){
+													return true;
+												}else{													
+													appendMessage("上传华富接口失败:\n"+resJson.toJSONString());
+													//logger.error("错误参数",JSON.toJSONString(hfData));
+													//logger.error("返回值",JSON.toJSONString(resJson));
 													return false;
 												}
-												return true;
 											}
 										});
 										futures2.add(future);
@@ -441,6 +478,8 @@ public class MainJFrame extends JFrame {
 											if(flag == true){
 											    successCount.incrementAndGet();
 											    succ += 1;
+											}else{
+												failCount.incrementAndGet();
 											}
 										} catch (InterruptedException e1) {
 											failCount.incrementAndGet();
@@ -518,11 +557,14 @@ public class MainJFrame extends JFrame {
 				textField_hfurl.setText(hfurl);
 				// 初始化执行的线程数和每次查询的过车数可配置
 				Properties prop2 = Util.readPropertiesFromFile("config", "conf.properties");
-				execThreadsNumber = Integer.parseInt(prop2.getProperty("execThreadsNumber", "3"));
-				perQueryNumber = Integer.parseInt(prop2.getProperty("perQueryNumber", "20"));
+				execThreadsNumber = Integer.parseInt(prop2.getProperty("execThreadsNumber", "10"));
+				execThreadsNumber2 = Integer.parseInt(prop2.getProperty("execThreadsNumber2", "100"));
+				perQueryNumber = Integer.parseInt(prop2.getProperty("perQueryNumber", "100"));
 				System.out.println(execThreadsNumber);
 				System.out.println(perQueryNumber);
-				appendMessage("执行线程数：" + execThreadsNumber);
+				System.out.println(execThreadsNumber2);
+				appendMessage("执行线程数(下载图片)：" + execThreadsNumber);
+				appendMessage("执行线程数2(上传HF)：" + execThreadsNumber2);
 				appendMessage("每次查询过车数：" + perQueryNumber);
 				// 把上次的保存下来的条件初始化
 				Properties prop3 = Util.readPropertiesFromFile("tmp", "condition.txt");
