@@ -7,7 +7,9 @@ import java.sql.Statement;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.github.chm.common.DateUtil;
 import com.github.chm.common.JdbcUtil;
@@ -20,10 +22,11 @@ public class SampleDao {
 		try {
 			conn = JdbcUtil.getConnection();
 			String startTime = DateUtil.format(vehicleStartTime);
-			String endTime = DateUtil.format(new Date(vehicleStartTime.getTime() + 60L));
+			String endTime = DateUtil.format(new Date(vehicleStartTime.getTime() + 60*1000L));
 			String sql = String.format(
 					"select vehicle_id from ( select vehicle_id from BMS_VEHICLE_PASS where  pass_Time Between to_date('%s','yyyy-mm-dd hh24:mi:ss')AND to_date('%s','yyyy-mm-dd hh24:mi:ss') ORDER BY vehicle_id asc )where rownum = 1",
 					startTime, endTime);
+			//System.out.println(sql);
 			Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(sql);
 			if (rs.next()) {
@@ -83,5 +86,29 @@ public class SampleDao {
 			}
 		}
 		return list;
+	}
+
+	public Map<String, String> getMapOfcrossingIdNindexCode() throws SQLException {
+		Map<String, String> map = new HashMap<String, String>();
+		Connection conn = null;
+		try {
+			conn = JdbcUtil.getConnection();
+			String sql = "select CROSSING_ID, CROSSING_INDEX_CODE from BMS_CROSSING_INFO";
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				String crossingId = rs.getString("CROSSING_ID");
+				String crossingIndexCode = rs.getString("CROSSING_INDEX_CODE");
+				map.put(crossingId, crossingIndexCode);
+			}
+			rs.close();
+			stmt.close();
+
+		} finally {
+			if (conn != null) {
+				conn.close();
+			}
+		}
+		return map;
 	}
 }

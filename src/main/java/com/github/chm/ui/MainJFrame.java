@@ -26,6 +26,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -274,7 +275,20 @@ public class MainJFrame extends JFrame {
 							recoverCompomentsPower();
 							return;
 						}
-												
+						
+						//获取卡口编号
+						Map<String,String> mapOfcrossingIdNindexCode =null;
+						try {
+							mapOfcrossingIdNindexCode = new SampleDao().getMapOfcrossingIdNindexCode();
+						} catch (SQLException e1) {
+							appendMessage("获取卡口编号和index的对应关系出错"+e1.getMessage());
+							logger.error(e1.getMessage(), e1);
+							isCanceled = true;
+							status = -1;
+							recoverCompomentsPower();
+							return;
+						}
+						
 						Set<Integer> vehileIds = Util.coverStringToSet(vehicle_id);
 						// 获取开始抽取的vehicle_id
 						Long vehicleStartIdFromTime = null;
@@ -373,13 +387,19 @@ public class MainJFrame extends JFrame {
 							theVehicleId.compareAndSet(theVehicleId.get(), vehicleStartId);
 							refreshVehicleStartId();
 							
+							//转换卡口编号为卡口index
+							for(HfData hfData : oneQuerylist0){
+								String deviceId = hfData.getDeviceId();
+								deviceId = mapOfcrossingIdNindexCode.get(deviceId);
+								hfData.setDeviceId(deviceId);
+							}
 							//根据卡口过滤数据
 							List<HfData> oneQuerylist = new ArrayList<HfData>();
 							if (vehileIds.size() == 0) {
 								oneQuerylist = oneQuerylist0;
 							} else {
 								for (HfData hfData : oneQuerylist) {
-									if (vehileIds.contains(hfData.getVehicleId())) {
+									if (vehileIds.contains(hfData.getVehicleId())) {										
 										oneQuerylist.add(hfData);
 									}
 								}
@@ -393,7 +413,7 @@ public class MainJFrame extends JFrame {
 										@Override
 										public HfData call() throws Exception {
 											String url = hfData.getImageURL();
-											//url = "http://10.33.42.99:8085/bms/styles/images/autoLogs/%E5%AE%9D%E9%A9%AC.png";
+											url = "http://localhost:8080/img/hello.jpg";
 											String base64Img = httpRequest.getBase64Img(url);
 											HfData res = new HfData();
 											res.setImageData(base64Img);
@@ -451,8 +471,8 @@ public class MainJFrame extends JFrame {
 													return true;
 												}else{													
 													appendMessage("上传华富接口失败:\n"+resJson.toJSONString());
-													//logger.error("错误参数",JSON.toJSONString(hfData));
-													//logger.error("返回值",JSON.toJSONString(resJson));
+													logger.info("错误参数"+JSON.toJSONString(hfData));
+													logger.info("返回值"+JSON.toJSONString(resJson));
 													return false;
 												}
 											}
