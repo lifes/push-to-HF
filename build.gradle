@@ -21,16 +21,10 @@ dependencies {
     compile 'com.alibaba:fastjson:1.2.12'
     compile files('lib/ojdbc6-12.1.0.1.0.jar')
     
-    //log
     //log4j2
-    compile 'org.apache.logging.log4j:log4j-api:2.3'
-    compile 'org.apache.logging.log4j:log4j-core:2.3'
-    //log4j1 routed log4j2, so that spring can use log4j2
-    compile 'org.apache.logging.log4j:log4j-1.2-api:2.3'
-    //SLF4J
-    //compile 'org.slf4j:slf4j-api:1.6.6'
-    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.2'
-    
-    
-    testCompile 'junit:junit:4.12'
+    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.6.2'
+    compile 'org.apache.logging.log4j:log4j-api:2.6.2'
+    compile 'org.apache.logging.log4j:log4j-core:2.6.2'
+    compile 'org.apache.logging.log4j:log4j-1.2-api:2.6.2'   
+    compile 'com.lmax:disruptor:3.3.4'
 }

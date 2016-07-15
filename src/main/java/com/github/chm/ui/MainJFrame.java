@@ -448,12 +448,12 @@ public class MainJFrame extends JFrame {
 									try {
 										step2Data.add(future.get());										
 									} catch (InterruptedException e1) {
-										e1.printStackTrace();
 										failCount.incrementAndGet();
+										logger.error(e1.getMessage(),e1);
 									} catch (ExecutionException e1) {
 										failCount.incrementAndGet();
 										appendMessage(e1.getMessage());
-										e1.printStackTrace();
+										logger.error(e1.getMessage(),e1);
 									}
 								}
 								appendMessage(String.format("本次查询%d条数据,共查询到%d条数据,共有设定卡口过车记录%d条,下载图片成功%d条数据",
@@ -470,9 +470,10 @@ public class MainJFrame extends JFrame {
 												if(resJson.getIntValue("errorcode")==0){
 													return true;
 												}else{													
-													appendMessage("上传华富接口失败:\n"+resJson.toJSONString());
-													logger.info("错误参数"+JSON.toJSONString(hfData));
-													logger.info("返回值"+JSON.toJSONString(resJson));
+													//appendMessage("上传华富接口失败:\n"+resJson.toJSONString());
+													hfData.setImageData("");
+													logger.info("E参数"+JSON.toJSONString(hfData));
+													logger.info("E返回值"+JSON.toJSONString(resJson));
 													return false;
 												}
 											}
@@ -503,11 +504,11 @@ public class MainJFrame extends JFrame {
 											}
 										} catch (InterruptedException e1) {
 											failCount.incrementAndGet();
-											e1.printStackTrace();
+											logger.error(e1.getMessage(),e1);
 										} catch (ExecutionException e1) {
 											failCount.incrementAndGet();
-											appendMessage("发送数据给华富失败"+e1.getMessage());
-											e1.printStackTrace();
+											appendMessage(e1.getMessage());
+											logger.error(e1.getMessage(),e1);
 										}
 									}										
 									appendMessage(String.format("发送给华富%d条数据，成功%d条数据",step2Data.size(),succ));

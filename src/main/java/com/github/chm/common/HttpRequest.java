@@ -17,7 +17,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,10 +29,10 @@ import java.security.NoSuchAlgorithmException;
  */
 public class HttpRequest {
 
-    //连接超时时间，默认10秒
+    //连接超时时间，默认5秒
     private int socketTimeout = 5000;
 
-    //传输超时时间，默认30秒
+    //传输超时时间，默认10秒
     private int connectTimeout = 10000;
 
     //请求器的配置
@@ -42,7 +41,7 @@ public class HttpRequest {
     //HTTP请求器
     private CloseableHttpClient httpClient;
 
-    public HttpRequest() throws NoSuchAlgorithmException {
+    public HttpRequest() throws NoSuchAlgorithmException{
         init();
     }
 
@@ -54,9 +53,9 @@ public class HttpRequest {
                 null,
                 SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
         httpClient = HttpClients.custom()
-                .setSSLSocketFactory(sslsf)
+                .setSSLSocketFactory(sslsf).setMaxConnPerRoute(200).setMaxConnTotal(200)
                 .build();
-
+        
         requestConfig = RequestConfig.custom().setSocketTimeout(socketTimeout).setConnectTimeout(connectTimeout).build();
     }
 
@@ -127,13 +126,13 @@ public class HttpRequest {
                     JSONObject res = JSON.parseObject(responseContent);
                     return res;
                 }catch (Throwable e){
-                    throw new UpLoadToHfException(String.format("(jsonParse错误)上传HF接口失败:%s;", dt),e);
+                    throw new UpLoadToHfException("(jsonParse错误)上传HF接口失败",e);
                 }
             } else {
-                throw new UpLoadToHfException(String.format("(状态不是200)上传HF接口失败:%s;", dt));
+                throw new UpLoadToHfException("(状态不是200)上传HF接口失败");
             }
         } catch (IOException e) {
-            throw new UpLoadToHfException(String.format("(IO异常)上传HF接口失败%s:;", dt), e);
+            throw new UpLoadToHfException("(IO异常)上传HF接口失败", e);
         } finally {
             try {
                 if (response != null) {

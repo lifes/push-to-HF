@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import com.github.chm.common.DateUtil;
 import com.github.chm.common.JdbcUtil;
 import com.github.chm.model.HfData;

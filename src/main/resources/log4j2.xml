@@ -1,24 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="OFF">
-	<Properties>
-		<property name="rolling_file_name">logs/log.log</property>
-	</Properties>
+<Configuration status="WARN">
 	<Appenders>
-		<Console name="Console" target="SYSTEM_OUT">
-			<PatternLayout
-				pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} %L %M - %msg%n" />
+		<Console name="STDOUT" target="SYSTEM_OUT">
+			<PatternLayout pattern="%m%n" />
 		</Console>
-		<RollingFile name="RollingFile" fileName="${rolling_file_name}"
-			filePattern="${rolling_file_name}.%d{yyyy-MM-dd.HH}-%i.log.gz">
-			<PatternLayout
-				pattern="%d{yyyy-MM-dd HH:mm:ss } [%t] %-5level %class{36} %L %M - %msg%xEx%n" />
-			<SizeBasedTriggeringPolicy size="10MB" />
-		</RollingFile>
+		<RollingRandomAccessFile name="RollingRandomAccessFile" immediateFlush="false" append="false"
+			fileName="logs/app.log" filePattern="logs/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz">
+			<PatternLayout>
+				<Pattern>%d %p [%t] %location %m %ex%n </Pattern>
+			</PatternLayout>
+			<Policies>
+				<TimeBasedTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="250 MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="20"/>
+		</RollingRandomAccessFile>
 	</Appenders>
-	<Loggers>		
-		<Root level="debug">
-			<AppenderRef ref="Console" level="info"/>
-			<AppenderRef ref="RollingFile" level="info"/>
-		</Root>
+	<Loggers>
+		<AsyncLogger name="com.github.chm.ui.MainJFrame" level="info" additivity="false"
+			includeLocation="true">
+			<AppenderRef ref="RollingRandomAccessFile" />
+		</AsyncLogger>
+		<asyncRoot level="error">
+			<AppenderRef ref="STDOUT" />
+		</asyncRoot>
 	</Loggers>
 </Configuration>
