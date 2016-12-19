@@ -15,7 +15,7 @@ public class DateUtil {
     }
     public static String format(Date date) {
 
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return df.format(date);
     }
     public static Date parse(String dateString, String pattern) throws ParseException{

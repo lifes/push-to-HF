@@ -296,7 +296,7 @@ public class MainJFrame extends JFrame {
 						if (!"".equals(textField_vehicleStartTime.getText().trim())) {
 							try {
 								vehicleStartTime = DateUtil.parse(textField_vehicleStartTime.getText(),
-										"yyyy-MM-dd hh:mm:ss");
+										"yyyy-MM-dd HH:mm:ss");
 							} catch (ParseException e1) {
 								appendMessage("请检查时间参数");
 								appendMessage(e1.getMessage());
@@ -367,20 +367,30 @@ public class MainJFrame extends JFrame {
 								return;
 							}
 							List<HfData> oneQuerylist0 = new ArrayList<HfData>();
+							int waitCount = 0;
 							try {
 								oneQuerylist0 = new SampleDao().getVehicleDatas(vehicleStartId,
 										vehicleStartId + perQueryNumber);
 								if(oneQuerylist0.size()<perQueryNumber/4){
 									appendMessage("查询数据不够perQueryNumber"+perQueryNumber+"的1/4,"+"只有"+oneQuerylist0.size()+"条。睡眠2秒");
-									/*try {
-										Thread.sleep(2000);										
+									try {
+										Thread.sleep(2000);
+										if(waitCount<5){
+											waitCount ++;
+											continue;
+										}else{
+											waitCount = 0;
+										}										
 									} catch (InterruptedException e) {
 										// TODO Auto-generated catch block
 										e.printStackTrace();
-									}*/
+									}
+								}else{
+									waitCount = 0;
 								}
 							} catch (SQLException e1) {
 								appendMessage("查询失败" + e1.getMessage());
+								waitCount = 0;
 								continue;
 							}
 							vehicleStartId += perQueryNumber;
@@ -388,23 +398,27 @@ public class MainJFrame extends JFrame {
 							refreshVehicleStartId();
 							
 							//转换卡口编号为卡口index
-							for(HfData hfData : oneQuerylist0){
+							
+							List<HfData> oneQuerylist = new ArrayList<HfData>();
+							if (vehileIds.size() == 0) {
+								oneQuerylist = oneQuerylist0;
+							} else {
+								for (HfData hfData : oneQuerylist0) {
+									if (vehileIds.contains(Integer.parseInt(hfData.getDeviceId()))) {										
+										oneQuerylist.add(hfData);
+									}
+								}
+							}
+							
+							for(HfData hfData : oneQuerylist){
 								String deviceId = hfData.getDeviceId();
 								deviceId = mapOfcrossingIdNindexCode.get(deviceId);
 								hfData.setDeviceId(deviceId);
 							}
 							//根据卡口过滤数据
-							List<HfData> oneQuerylist = new ArrayList<HfData>();
-							if (vehileIds.size() == 0) {
-								oneQuerylist = oneQuerylist0;
-							} else {
-								for (HfData hfData : oneQuerylist) {
-									if (vehileIds.contains(hfData.getVehicleId())) {										
-										oneQuerylist.add(hfData);
-									}
-								}
-							}
+							
 							allCount.compareAndSet(allCount.get(), allCount.get() + oneQuerylist.size());
+							httpRequest.resetConfig(3000, 5000);
 							if (oneQuerylist.size() > 0) {
 								List<Future<HfData>> futures = new ArrayList<Future<HfData>>();
 								for (int i = 0; i < oneQuerylist.size(); i++) {
@@ -413,7 +427,7 @@ public class MainJFrame extends JFrame {
 										@Override
 										public HfData call() throws Exception {
 											String url = hfData.getImageURL();
-											url = "http://localhost:8080/img/hello.jpg";
+											//url = "http://localhost:8080/img/hello.jpg";
 											String base64Img = httpRequest.getBase64Img(url);
 											HfData res = new HfData();
 											res.setImageData(base64Img);
@@ -458,7 +472,8 @@ public class MainJFrame extends JFrame {
 								}
 								appendMessage(String.format("本次查询%d条数据,共查询到%d条数据,共有设定卡口过车记录%d条,下载图片成功%d条数据",
 										perQueryNumber, oneQuerylist0.size(), oneQuerylist.size(), step2Data.size()));
-								// step2	begin							
+								// step2	begin	
+								httpRequest.resetConfig(10000, 30000);
 								if(step2Data.size()>0){
 									List<Future<Boolean>> futures2 = new ArrayList<Future<Boolean>>();
 									for(int i=0; i<step2Data.size(); i++){

@@ -22,7 +22,7 @@ public class HfData {
 	private String plateType;
 	private String laneID;
 	private	String speed;
-	private String alarmID="-1";
+	private String alarmID="0";
 	private String carStatus;
 	private Integer vehicleId;
 	public String getImageData() {

@@ -29,11 +29,11 @@ import java.security.NoSuchAlgorithmException;
  */
 public class HttpRequest {
 
-    //连接超时时间，默认5秒
-    private int socketTimeout = 5000;
+    //连接超时时间，默认10秒
+    private int socketTimeout = 10000;
 
-    //传输超时时间，默认10秒
-    private int connectTimeout = 10000;
+    //传输超时时间，默认30秒
+    private int connectTimeout = 30000;
 
     //请求器的配置
     private RequestConfig requestConfig;
@@ -53,12 +53,12 @@ public class HttpRequest {
                 null,
                 SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
         httpClient = HttpClients.custom()
-                .setSSLSocketFactory(sslsf).setMaxConnPerRoute(200).setMaxConnTotal(200)
+                .setSSLSocketFactory(sslsf).setMaxConnPerRoute(400).setMaxConnTotal(400)
                 .build();
         
         requestConfig = RequestConfig.custom().setSocketTimeout(socketTimeout).setConnectTimeout(connectTimeout).build();
     }
-
+ 
     public void resetConfig(int socketTimeout, int connectTimeout) {
         requestConfig = RequestConfig.custom().setSocketTimeout(socketTimeout).setConnectTimeout(connectTimeout).build();
     }
